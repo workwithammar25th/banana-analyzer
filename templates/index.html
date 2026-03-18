@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Banana Analyzer — Freshness Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #F8F7F2;
+      --surface:      #FFFFFF;
+      --border:       #E5E4DC;
+      --border-light: #EFEFEA;
+      --text:         #18180F;
+      --muted:        #86867A;
+      --accent:       #BF9B3A;
+      --accent-bg:    #F5EDCF;
+      --green:        #2A6144;
+      --green-bg:     #D6EDE2;
+      --orange:       #B85A1E;
+      --orange-bg:    #FAE3D2;
+      --red:          #7D2030;
+      --red-bg:       #F2D5DA;
+      --yellow:       #A67C00;
+      --yellow-bg:    #FEF3C0;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 60px;
+      background: rgba(248,247,242,0.90);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 3rem;
+    }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      text-decoration: none; color: var(--text);
+    }
+
+    /* SVG banana logo */
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--text);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-mark svg { width: 22px; height: 22px; }
+
+    .logo-wordmark {
+      display: flex; flex-direction: column; line-height: 1;
+    }
+
+    .logo-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-sub {
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .nav-right {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 130px 3rem 80px;
+      max-width: 1160px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: var(--accent);
+    }
+
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(3rem, 5.5vw, 4.8rem);
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 460px;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-stats {
+      display: flex; gap: 2.5rem;
+    }
+
+    .hero-stat-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 0.2rem;
+    }
+
+    .hero-stat-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── UPLOAD PANEL ── */
+    .upload-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .upload-zone {
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      border-bottom: 1px solid var(--border);
+      min-height: 220px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+
+    .upload-zone:hover { background: #F2F1EC; }
+    .upload-zone.drag-over { background: var(--accent-bg); }
+
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    .upload-icon {
+      width: 56px; height: 56px;
+      background: var(--accent-bg);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.1rem;
+      transition: transform 0.2s;
+    }
+
+    .upload-zone:hover .upload-icon { transform: translateY(-2px); }
+
+    .upload-icon svg {
+      width: 24px; height: 24px;
+      stroke: var(--accent); fill: none;
+      stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .upload-zone h3 { font-size: 0.95rem; font-weight: 500; margin-bottom: 0.35rem; }
+    .upload-zone p  { font-size: 0.78rem; color: var(--muted); }
+
+    /* Preview */
+    #preview-wrap {
+      display: none;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #preview-img { width: 100%; height: 240px; object-fit: cover; display: block; }
+
+    .btn-change {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.73rem; font-weight: 500;
+      cursor: pointer; color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* Loader */
+    #loader {
+      display: none;
+      padding: 1.5rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .loader-track {
+      width: 100%; height: 2px;
+      background: var(--border-light);
+      border-radius: 999px; overflow: hidden;
+      margin-bottom: 0.6rem;
+    }
+
+    .loader-fill {
+      height: 100%; background: var(--accent);
+      border-radius: 999px;
+      animation: sweep 1.6s ease-in-out infinite;
+    }
+
+    @keyframes sweep {
+      0%   { width: 0%;  margin-left: 0%; }
+      50%  { width: 55%; margin-left: 22%; }
+      100% { width: 0%;  margin-left: 100%; }
+    }
+
+    .loader-text { font-size: 0.76rem; color: var(--muted); letter-spacing: 0.05em; }
+
+    /* Action */
+    .panel-action { padding: 1.25rem 2rem; }
+
+    .btn-analyze {
+      width: 100%; padding: 0.85rem;
+      background: var(--text); color: #fff;
+      border: none; border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem; font-weight: 500;
+      cursor: pointer; letter-spacing: 0.01em;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-analyze:hover:not(:disabled) { opacity: 0.82; transform: translateY(-1px); }
+    .btn-analyze:disabled { opacity: 0.28; cursor: not-allowed; transform: none; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 3rem 80px;
+    }
+
+    .section-label {
+      font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding-top: 0.5rem;
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .how-item {
+      padding: 2rem 1.75rem;
+      border-right: 1px solid var(--border);
+    }
+
+    .how-item:last-child { border-right: none; }
+
+    .how-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.75rem;
+    }
+
+    .how-title {
+      font-size: 0.875rem; font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .how-desc {
+      font-size: 0.8rem; color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── STAGES REFERENCE ── */
+    .stages-section {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 3rem 80px;
+    }
+
+    .stages-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .stage-ref {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .stage-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      margin-bottom: 0.75rem;
+    }
+
+    .dot-fresh    { background: var(--green); }
+    .dot-ripe     { background: var(--yellow); }
+    .dot-overripe { background: var(--orange); }
+    .dot-rotten   { background: var(--red); }
+
+    .stage-ref-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem; margin-bottom: 0.3rem;
+    }
+
+    .stage-ref-days {
+      font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.6rem;
+    }
+
+    .stage-ref-desc {
+      font-size: 0.8rem; color: var(--muted); line-height: 1.6;
+    }
+
+    /* ── RESULTS ── */
+    #results-section {
+      display: none;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 3rem 6rem;
+    }
+
+    /* Summary */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--surface);
+      margin-bottom: 2rem;
+    }
+
+    .summary-cell {
+      padding: 1.5rem;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .summary-cell:last-child { border-right: none; }
+
+    .summary-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem; letter-spacing: -0.02em;
+      line-height: 1; margin-bottom: 0.25rem;
+    }
+
+    .summary-lbl {
+      font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Cards */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .banana-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    /* Stage colour tokens */
+    .card-fresh    { --stage-color: var(--green);  --stage-bg: var(--green-bg);  }
+    .card-ripe     { --stage-color: var(--yellow); --stage-bg: var(--yellow-bg); }
+    .card-overripe { --stage-color: var(--orange); --stage-bg: var(--orange-bg); }
+    .card-rotten   { --stage-color: var(--red);    --stage-bg: var(--red-bg);    }
+
+    .card-top {
+      padding: 1.5rem 1.75rem 1.25rem;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-banana-num {
+      font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.3rem;
+    }
+
+    .card-stage {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem; letter-spacing: -0.01em;
+      color: var(--stage-color);
+    }
+
+    .card-pill {
+      background: var(--stage-bg);
+      color: var(--stage-color);
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0.06em;
+      white-space: nowrap; flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+
+    .card-body { padding: 0 1.75rem 1.5rem; }
+
+    /* Metrics strip */
+    .card-metrics {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+
+    .card-metric {
+      padding: 1.1rem 0;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .card-metric:last-child { border-right: none; }
+
+    .metric-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.35rem; line-height: 1; margin-bottom: 0.2rem;
+    }
+
+    .metric-lbl {
+      font-size: 0.62rem; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Comment */
+    .card-comment {
+      padding: 1.1rem 0;
+      font-size: 0.84rem;
+      line-height: 1.65;
+      color: var(--muted);
+      font-style: italic;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Feature bars */
+    .card-features { padding-top: 1.1rem; }
+
+    .feat-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .feat-row:last-child { margin-bottom: 0; }
+
+    .feat-name {
+      font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); width: 52px; flex-shrink: 0;
+    }
+
+    .feat-track {
+      flex: 1; height: 5px;
+      background: var(--border-light);
+      border-radius: 999px; overflow: hidden;
+    }
+
+    .feat-fill {
+      height: 100%;
+      background: var(--stage-color);
+      border-radius: 999px;
+      transition: width 0.8s ease;
+    }
+
+    .feat-val {
+      font-size: 0.68rem; color: var(--muted);
+      width: 32px; text-align: right; flex-shrink: 0;
+    }
+
+    /* Recommendation strip */
+    .card-action {
+      margin-top: 1rem;
+      background: var(--stage-bg);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--stage-color);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .action-label { font-size: 0.62rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; }
+
+    /* Not banana */
+    .not-banana {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3.5rem;
+      text-align: center;
+    }
+
+    .not-banana h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem; margin-bottom: 0.75rem;
+    }
+
+    .not-banana p { font-size: 0.95rem; color: var(--muted); line-height: 1.7; }
+
+    /* Divider between sections */
+    .section-divider {
+      max-width: 1160px; margin: 0 auto 3rem;
+      padding: 0 3rem;
+    }
+
+    .section-divider hr { border: none; border-top: 1px solid var(--border); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: 1160px; margin: 0 auto;
+    }
+
+    .footer-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 0.9rem; color: var(--text);
+    }
+
+    .footer-meta {
+      font-size: 0.72rem; color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 0 1.5rem; }
+      .hero { grid-template-columns: 1fr; padding: 100px 1.5rem 3rem; gap: 2.5rem; }
+      .how-grid { grid-template-columns: 1fr 1fr; }
+      .how-item:nth-child(2) { border-right: none; }
+      .how-item:nth-child(1), .how-item:nth-child(2) { border-bottom: 1px solid var(--border); }
+      .stages-grid { grid-template-columns: 1fr 1fr; }
+      .how-section, .stages-section, #results-section { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .summary-row { grid-template-columns: 1fr 1fr; }
+      .summary-cell:nth-child(2) { border-right: none; }
+      .summary-cell:nth-child(1), .summary-cell:nth-child(2) { border-bottom: 1px solid var(--border); }
+      footer { padding: 1.5rem; flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="logo-mark">
+      <!-- Banana SVG icon -->
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 17C5 17 4 10 9 7C14 4 20 6 20 6C20 6 16 7 13 10C10 13 10 19 10 19" stroke="#FFD93D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 19C10 19 7 18 6 16C5 14 5 17 5 17" stroke="#FFD93D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="logo-wordmark">
+      <span class="logo-name">Banana Analyzer</span>
+      <span class="logo-sub">Freshness Intelligence</span>
+    </div>
+  </a>
+  <span class="nav-right">ML · Computer Vision</span>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div>
+    <p class="hero-eyebrow">Random Forest · Computer Vision</p>
+    <h1>Your banana<br>is trying to<br><em>tell you something.</em></h1>
+    <p class="hero-desc">
+      Upload a photo of your banana — or several. Our machine learning model analyses the colour composition, texture, and brightness to classify freshness, estimate days remaining, and tell you whether to eat it or let it go.
+    </p>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-value">4</div>
+        <div class="hero-stat-label">Freshness Stages</div>
+      </div>
+      <div>
+        <div class="hero-stat-value">100%</div>
+        <div class="hero-stat-label">Model Accuracy</div>
+      </div>
+      <div>
+        <div class="hero-stat-value">±0.5d</div>
+        <div class="hero-stat-label">Shelf Life Error</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Panel -->
+  <div class="upload-panel">
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept="image/*" />
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <h3>Upload a banana photo</h3>
+      <p>Drag and drop, or click to browse &middot; JPG PNG WEBP</p>
+    </div>
+
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="Preview" />
+      <button class="btn-change" onclick="resetUpload()">Change</button>
+    </div>
+
+    <div id="loader">
+      <div class="loader-track"><div class="loader-fill"></div></div>
+      <p class="loader-text">Analysing image</p>
+    </div>
+
+    <div class="panel-action">
+      <button class="btn-analyze" id="analyze-btn" disabled onclick="analyze()">Analyse</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<div class="section-divider"><hr></div>
+<section class="how-section">
+  <p class="section-label">How it works</p>
+  <div class="how-grid">
+    <div class="how-item">
+      <div class="how-num">01</div>
+      <div class="how-title">Upload</div>
+      <div class="how-desc">Drop any banana photo. One banana, a bunch, a fruit bowl — the model handles it all.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-num">02</div>
+      <div class="how-title">Feature Extraction</div>
+      <div class="how-desc">We convert the image to HSV colour space and extract yellow, green, brown and dark pixel ratios plus overall brightness.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-num">03</div>
+      <div class="how-title">Classification</div>
+      <div class="how-desc">A Random Forest classifier trained on 2,000 samples predicts the freshness stage for each detected banana region.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-num">04</div>
+      <div class="how-title">Shelf Life</div>
+      <div class="how-desc">A second Random Forest regressor estimates days remaining, with a mean absolute error of just 0.55 days.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STAGES ── -->
+<div class="section-divider"><hr></div>
+<section class="stages-section">
+  <p class="section-label">Freshness stages</p>
+  <div class="stages-grid">
+    <div class="stage-ref">
+      <div class="stage-dot dot-fresh"></div>
+      <div class="stage-ref-name">Fresh</div>
+      <div class="stage-ref-days">5 – 8 days remaining</div>
+      <div class="stage-ref-desc">Green-yellow colouration, firm, high brightness. Will ripen further. Safe to eat or store.</div>
+    </div>
+    <div class="stage-ref">
+      <div class="stage-dot dot-ripe"></div>
+      <div class="stage-ref-name">Ripe</div>
+      <div class="stage-ref-days">2 – 4 days remaining</div>
+      <div class="stage-ref-desc">Bright uniform yellow, high saturation. Maximum sweetness. Ideal window for consumption.</div>
+    </div>
+    <div class="stage-ref">
+      <div class="stage-dot dot-overripe"></div>
+      <div class="stage-ref-name">Overripe</div>
+      <div class="stage-ref-days">0 – 1 days remaining</div>
+      <div class="stage-ref-desc">Brown patches developing, softening flesh, reduced brightness. Edible but best used for baking.</div>
+    </div>
+    <div class="stage-ref">
+      <div class="stage-dot dot-rotten"></div>
+      <div class="stage-ref-name">Rotten</div>
+      <div class="stage-ref-days">0 days remaining</div>
+      <div class="stage-ref-desc">Dominated by dark pixels, very low brightness, significant decay. Not safe for consumption. Discard.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── RESULTS ── -->
+<section id="results-section">
+  <div class="section-divider" style="padding:0; margin-bottom:2rem;"><hr></div>
+  <p class="section-label">Analysis Results</p>
+  <div id="results-content"></div>
+</section>
+
+<footer>
+  <span class="footer-brand">Banana Analyzer</span>
+  <span class="footer-meta">Random Forest &middot; OpenCV &middot; Flask &middot; scikit-learn &middot; Python</span>
+</footer>
+
+<script>
+  const fileInput   = document.getElementById('file-input');
+  const uploadZone  = document.getElementById('upload-zone');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg  = document.getElementById('preview-img');
+  const analyzeBtn  = document.getElementById('analyze-btn');
+  const loader      = document.getElementById('loader');
+  let selectedFile  = null;
+
+  fileInput.addEventListener('change', e => {
+    selectedFile = e.target.files[0];
+    if (selectedFile) showPreview(selectedFile);
+  });
+
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    selectedFile = e.dataTransfer.files[0];
+    if (selectedFile) showPreview(selectedFile);
+  });
+
+  function showPreview(file) {
+    previewImg.src = URL.createObjectURL(file);
+    uploadZone.style.display = 'none';
+    previewWrap.style.display = 'block';
+    analyzeBtn.disabled = false;
+    document.getElementById('results-section').style.display = 'none';
+  }
+
+  function resetUpload() {
+    selectedFile = null; fileInput.value = '';
+    previewWrap.style.display = 'none';
+    uploadZone.style.display = 'flex';
+    analyzeBtn.disabled = true;
+    loader.style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+  }
+
+  const cardClass = { Fresh: 'card-fresh', Ripe: 'card-ripe', Overripe: 'card-overripe', Rotten: 'card-rotten' };
+
+  const pillLabel = { Fresh: 'Safe to Eat', Ripe: 'Eat Now', Overripe: 'Barely Safe', Rotten: 'Discard' };
+
+  const actionText = {
+    Fresh:    'Store at room temperature and eat within 8 days.',
+    Ripe:     'Eat today or tomorrow — peak sweetness, do not wait.',
+    Overripe: 'Too soft for direct eating. Use in baking.',
+    Rotten:   'Do not consume. Dispose of immediately.'
+  };
+
+  async function analyze() {
+    if (!selectedFile) return;
+    analyzeBtn.disabled = true;
+    loader.style.display = 'block';
+    document.getElementById('results-section').style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('image', selectedFile);
+
+    try {
+      const res  = await fetch('/predict', { method: 'POST', body: fd });
+      const data = await res.json();
+      loader.style.display = 'none';
+      renderResults(data);
+    } catch {
+      loader.style.display = 'none';
+      analyzeBtn.disabled = false;
+      alert('Analysis failed. Please try again.');
+    }
+  }
+
+  function featureBar(name, value, max) {
+    const pct = Math.min((value / max) * 100, 100).toFixed(0);
+    return `
+      <div class="feat-row">
+        <span class="feat-name">${name}</span>
+        <div class="feat-track"><div class="feat-fill" style="width:${pct}%"></div></div>
+        <span class="feat-val">${value}%</span>
+      </div>`;
+  }
+
+  function renderResults(data) {
+    const section = document.getElementById('results-section');
+    const content = document.getElementById('results-content');
+
+    if (!data.is_banana) {
+      content.innerHTML = `
+        <div class="not-banana">
+          <h2>No banana detected</h2>
+          <p>${data.message}</p>
+        </div>`;
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth' });
+      analyzeBtn.disabled = false;
+      return;
+    }
+
+    const bananas = data.bananas || [];
+    const safe    = bananas.filter(b => b.safe).length;
+    const avgDays = Math.round(bananas.reduce((s, b) => s + b.days_left, 0) / bananas.length);
+    const discard = bananas.length - safe;
+
+    // Summary (only if multiple)
+    let summaryHTML = '';
+    if (bananas.length > 1) {
+      summaryHTML = `
+        <div class="summary-row" style="margin-bottom:2rem">
+          <div class="summary-cell">
+            <div class="summary-val">${bananas.length}</div>
+            <div class="summary-lbl">Detected</div>
+          </div>
+          <div class="summary-cell">
+            <div class="summary-val">${safe}</div>
+            <div class="summary-lbl">Safe to Eat</div>
+          </div>
+          <div class="summary-cell">
+            <div class="summary-val">${discard}</div>
+            <div class="summary-lbl">Discard</div>
+          </div>
+          <div class="summary-cell">
+            <div class="summary-val">${avgDays}</div>
+            <div class="summary-lbl">Avg. Days Left</div>
+          </div>
+        </div>`;
+    }
+
+    const cardsHTML = bananas.map((b, i) => {
+      const cls   = cardClass[b.freshness] || 'card-ripe';
+      const label = bananas.length > 1 ? `Banana ${i + 1}` : 'Detected Banana';
+      const days  = b.days_left === 0 ? '0' : `~${b.days_left}`;
+      const f     = b.features;
+      return `
+        <div class="banana-card ${cls}">
+          <div class="card-top">
+            <div>
+              <div class="card-banana-num">${label}</div>
+              <div class="card-stage">${b.freshness}</div>
+            </div>
+            <span class="card-pill">${pillLabel[b.freshness] || b.freshness}</span>
+          </div>
+          <div class="card-body">
+            <div class="card-metrics">
+              <div class="card-metric">
+                <div class="metric-val">${days}</div>
+                <div class="metric-lbl">Days Left</div>
+              </div>
+              <div class="card-metric">
+                <div class="metric-val">${b.safe ? 'Yes' : 'No'}</div>
+                <div class="metric-lbl">Safe to Eat</div>
+              </div>
+              <div class="card-metric">
+                <div class="metric-val">${Math.round(f.brightness)}</div>
+                <div class="metric-lbl">Brightness</div>
+              </div>
+            </div>
+            <div class="card-comment">"${b.comment}"</div>
+            <div class="card-features">
+              ${featureBar('Yellow', f.yellow_pct, 100)}
+              ${featureBar('Green',  f.green_pct,  100)}
+              ${featureBar('Brown',  f.brown_pct,  100)}
+              ${featureBar('Dark',   f.dark_pct,   100)}
+            </div>
+            <div class="card-action">
+              <span class="action-label">Recommendation</span>
+              <span>${actionText[b.freshness]}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    content.innerHTML = summaryHTML + `<div class="cards-grid">${cardsHTML}</div>`;
+    section.style.display = 'block';
+    section.scrollIntoView({ behavior: 'smooth' });
+    analyzeBtn.disabled = false;
+  }
+</script>
+</body>
+</html>
