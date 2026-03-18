@@ -13,14 +13,18 @@ import random
 app = Flask(__name__)
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(BASE, "model/classifier.pkl"), "rb") as f:
-    clf = pickle.load(f)
-with open(os.path.join(BASE, "model/regressor.pkl"), "rb") as f:
-    reg = pickle.load(f)
-with open(os.path.join(BASE, "model/scaler.pkl"), "rb") as f:
-    scaler = pickle.load(f)
-with open(os.path.join(BASE, "model/label_encoder.pkl"), "rb") as f:
-    le = pickle.load(f)
+def _load(name):
+    for d in [BASE, os.path.join(BASE, "model"), "model", "."]:
+        p = os.path.join(d, name)
+        if os.path.exists(p):
+            with open(p, "rb") as f:
+                return pickle.load(f)
+    raise FileNotFoundError(f"{name} not found. DIR={BASE} FILES={os.listdir(BASE)}")
+
+clf    = _load("model/classifier.pkl")
+reg    = _load("model/regressor.pkl")
+scaler = _load("model/scaler.pkl")
+le     = _load("model/label_encoder.pkl")
 
 # ─────────────────────────────────────────
 # Dark humour comments
